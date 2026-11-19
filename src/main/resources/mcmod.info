@@ -2,7 +2,7 @@
   {
     "modid": "playeranimator",
     "name": "Player Animator",
-    "description": "Player animation library, client side only.",
+    "description": "Player animation library for 1.12.2. Animations are evaluated client-side; an optional server-to-client channel lets the server trigger a registered clip on a player.",
     "version": "${version}",
     "mcversion": "${mcversion}",
     "url": "https://github.com/KosmX/minecraftPlayerAnimator",

@@ -25,6 +25,7 @@ public final class PlayerAnimatorConfig {
 
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_DEBUG = "debug";
+    private static final String CATEGORY_NETWORK = "network";
 
     private static final Logger LOGGER = LogManager.getLogger(PlayerAnimatorMod.MOD_ID);
 
@@ -33,6 +34,7 @@ public final class PlayerAnimatorConfig {
     private static boolean bodyAdjust = false;
     private static boolean debugModel = false;
     private static boolean debugFrames = false;
+    private static boolean networkAnimations = true;
 
     private PlayerAnimatorConfig() {
     }
@@ -55,6 +57,14 @@ public final class PlayerAnimatorConfig {
                     configuration, "debugFrames", CATEGORY_DEBUG, false,
                     "Log the finished pose of every rendered frame. Very spammy, use for short sessions only."
             );
+            networkAnimations = readBoolean(
+                    configuration, "enable", CATEGORY_NETWORK, true,
+                    "Accept 'play this clip' packets from the server on the playeranimator channel. "
+                            + "Animations are still evaluated locally; the packet only says which clip to resolve. "
+                            + "Turn this off to ignore whatever a server sends. JVM property "
+                            + "-Dplayeranimator.networkAnimations overrides this.",
+                    "networkAnimations"
+            );
         } catch (Throwable throwable) {
             LOGGER.warn("Player Animator config could not be read, falling back to defaults", throwable);
         } finally {
@@ -65,13 +75,23 @@ public final class PlayerAnimatorConfig {
             }
         }
         loaded = true;
-        LOGGER.info("Player Animator config: bodyAdjust={}, debugModel={}, debugFrames={}", bodyAdjust, debugModel, debugFrames);
+        LOGGER.info("Player Animator config: bodyAdjust={}, debugModel={}, debugFrames={}, network.enable={}",
+                bodyAdjust, debugModel, debugFrames, networkAnimations);
     }
 
     private static boolean readBoolean(Configuration configuration, String key, String category,
                                        boolean defaultValue, String comment) {
+        return readBoolean(configuration, key, category, defaultValue, comment, key);
+    }
+
+    /**
+     * @param propertyKey name used for the {@code -Dplayeranimator.*} override; it differs from the
+     *                    config key where the file key is shorter than the property (network.enable).
+     */
+    private static boolean readBoolean(Configuration configuration, String key, String category,
+                                       boolean defaultValue, String comment, String propertyKey) {
         boolean value = configuration.getBoolean(key, category, defaultValue, comment);
-        String property = System.getProperty(PROPERTY_PREFIX + key);
+        String property = System.getProperty(PROPERTY_PREFIX + propertyKey);
         if (property == null) {
             return value;
         }
@@ -108,5 +128,10 @@ public final class PlayerAnimatorConfig {
     /** Per-frame pose dump. */
     public static boolean isDebugFrames() {
         return cachedOrProperty("debugFrames", debugFrames);
+    }
+
+    /** Accept animation packets from the server. */
+    public static boolean isNetworkAnimations() {
+        return cachedOrProperty("networkAnimations", networkAnimations);
     }
 }
